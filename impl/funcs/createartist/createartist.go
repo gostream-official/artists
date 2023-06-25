@@ -175,9 +175,9 @@ func ValidateArtistStatsRequestBody(request *CreateArtistStatsRequestBody) *Crea
 //
 // Returns:
 //
-//	An error, if the artist could not be found or an error,
+//	An error, if the artist does exist already,
 //	if the database request failed, nothing if successful.
-func CheckIfArtistExists(store *store.MongoStore[models.ArtistInfo], artistID string) error {
+func EnsureArtistDoesNotExist(store *store.MongoStore[models.ArtistInfo], artistID string) error {
 	filter := query.Filter{
 		Root: query.FilterOperatorEq{
 			Key:   "_id",
@@ -192,10 +192,10 @@ func CheckIfArtistExists(store *store.MongoStore[models.ArtistInfo], artistID st
 	}
 
 	if len(items) == 0 {
-		return fmt.Errorf("artist not found")
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("artist already exists")
 }
 
 // Description:
@@ -256,13 +256,13 @@ func Handler(request *api.APIRequest, object interface{}) *api.APIResponse {
 		},
 	}
 
-	err = CheckIfArtistExists(artistStore, artist.ID)
+	err = EnsureArtistDoesNotExist(artistStore, artist.ID)
 	if err != nil {
-		log.Warnf("[%s] artist does exist already: %s", context.ID, err)
+		log.Warnf("[%s] artist already exists: %s", context.ID, err)
 		return &api.APIResponse{
 			StatusCode: http.StatusConflict,
 			Body: CreateArtistErrorResponseBody{
-				Message: "artist does already exist",
+				Message: "artist already exists",
 			},
 		}
 	}
