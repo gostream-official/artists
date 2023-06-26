@@ -28,5 +28,5 @@ type ArtistInfo struct {
 type ArtistStats struct {
 
 	// The popularity factor of the artist.
-	Popularity float32 `json:"popularity" bson:"popularity"`
+	Popularity float32 `json:"popularity" bson:"popularity,truncate"`
 }
